@@ -1,4 +1,4 @@
-# WifiLens
+# Wi-Fi Lens
 
 An iOS app that scans Wi-Fi router labels or cards using the camera, detects network credentials, and connects automatically.
 
