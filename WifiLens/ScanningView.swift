@@ -6,22 +6,37 @@
 //
 
 import SwiftUI
-import AVFoundation
+import VisionKit
+import UIKit
 
 struct ScanningView: View {
     var onCancel: () -> Void
+    var onCredentialsFound: (String, String, UIImage?) -> Void
 
-    @State private var camera = CameraModel()
+    @State private var scannerModel = DataScannerModel()
     @State private var scanLineOffset: CGFloat = 0
 
     private let viewfinderSize: CGFloat = 260
     private let cornerLength: CGFloat = 28
     private let cornerLineWidth: CGFloat = 4
 
+    private var scanningStatusText: String {
+        switch (scannerModel.partialSSID, scannerModel.partialPassword) {
+        case (nil, nil):
+            return "Looking for Wi-Fi name\nand password..."
+        case (.some, nil):
+            return "Found network name —\nlooking for password..."
+        case (nil, .some):
+            return "Found password —\nlooking for network name..."
+        default:
+            return "Found Wi-Fi details!"
+        }
+    }
+
     var body: some View {
         ZStack {
-            // Camera feed
-            CameraPreviewView(session: camera.session)
+            // DataScanner camera feed
+            DataScannerView(model: $scannerModel)
                 .ignoresSafeArea()
 
             // Dark overlay outside the viewfinder cutout
@@ -39,11 +54,12 @@ struct ScanningView: View {
                 )
 
             VStack(spacing: 0) {
-                // Top label
-                Text("Looking for Wi-Fi name\nand password...")
+                // Status label
+                Text(scanningStatusText)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
+                    .animation(.easeInOut(duration: 0.2), value: scanningStatusText)
                     .padding(.top, 72)
                     .padding(.horizontal, 32)
 
@@ -93,8 +109,12 @@ struct ScanningView: View {
             }
         }
         .ignoresSafeArea()
-        .onAppear { camera.start() }
-        .onDisappear { camera.stop() }
+        .onAppear { scannerModel.startScanning() }
+        .onDisappear { scannerModel.stopScanning() }
+        .onChange(of: scannerModel.detectedCredentials?.ssid) { _, ssid in
+            guard let ssid, let password = scannerModel.detectedCredentials?.password else { return }
+            onCredentialsFound(ssid, password, scannerModel.cameraSnapshot)
+        }
     }
 }
 
@@ -107,10 +127,10 @@ private struct CornerBracketsView: View {
 
     var body: some View {
         ZStack {
-            corner().offset(x: -size / 2, y: -size / 2)                              // top-left
-            corner().rotationEffect(.degrees(90)).offset(x: size / 2, y: -size / 2)  // top-right
-            corner().rotationEffect(.degrees(180)).offset(x: size / 2, y: size / 2)  // bottom-right
-            corner().rotationEffect(.degrees(270)).offset(x: -size / 2, y: size / 2) // bottom-left
+            corner().offset(x: -size / 2, y: -size / 2)
+            corner().rotationEffect(.degrees(90)).offset(x: size / 2, y: -size / 2)
+            corner().rotationEffect(.degrees(180)).offset(x: size / 2, y: size / 2)
+            corner().rotationEffect(.degrees(270)).offset(x: -size / 2, y: size / 2)
         }
     }
 
@@ -124,37 +144,6 @@ private struct CornerBracketsView: View {
     }
 }
 
-// MARK: - Camera Model
-
-@Observable
-class CameraModel {
-    let session = AVCaptureSession()
-
-    init() {
-        setup()
-    }
-
-    private func setup() {
-        session.sessionPreset = .photo
-        guard
-            let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-            let input = try? AVCaptureDeviceInput(device: device),
-            session.canAddInput(input)
-        else { return }
-        session.addInput(input)
-    }
-
-    func start() {
-        guard !session.isRunning else { return }
-        DispatchQueue.global(qos: .userInitiated).async { self.session.startRunning() }
-    }
-
-    func stop() {
-        guard session.isRunning else { return }
-        DispatchQueue.global(qos: .userInitiated).async { self.session.stopRunning() }
-    }
-}
-
 #Preview {
-    ScanningView(onCancel: {})
+    ScanningView(onCancel: {}, onCredentialsFound: { _, _, _ in })
 }
