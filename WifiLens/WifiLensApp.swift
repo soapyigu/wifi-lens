@@ -89,7 +89,7 @@ struct WifiLensApp: App {
                 }
             )
 
-        case .connectFail(let networkName, let ssid, let password):
+        case .connectFail(let networkName, _, _):
             ConnectFailView(
                 networkName: networkName,
                 onTryAgain: { screen = .connecting(networkName: networkName) },

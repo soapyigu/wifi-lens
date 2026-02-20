@@ -69,10 +69,17 @@ struct ScanningView: View {
                 ZStack {
                     // Animated scan line
                     Rectangle()
-                        .fill(Color.blue)
-                        .frame(width: viewfinderSize - 8, height: 2)
+                        .fill(
+                            LinearGradient(
+                                colors: [.clear, .cyan.opacity(0.9), .cyan, .cyan.opacity(0.9), .clear],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: viewfinderSize - 8, height: 3)
+                        .shadow(color: .cyan.opacity(0.9), radius: 6)
+                        .shadow(color: .cyan.opacity(0.5), radius: 12)
                         .offset(y: scanLineOffset)
-                        .clipShape(RoundedRectangle(cornerRadius: 1))
 
                     // Corner brackets
                     CornerBracketsView(
@@ -82,12 +89,16 @@ struct ScanningView: View {
                     )
                 }
                 .frame(width: viewfinderSize, height: viewfinderSize)
+                .clipped()
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+                    scannerModel.updateRegionOfInterest(frame)
+                }
                 .onAppear {
                     let start = -(viewfinderSize / 2 - 4)
                     scanLineOffset = start
                     withAnimation(
-                        .easeInOut(duration: 1.8)
-                        .repeatForever(autoreverses: true)
+                        .linear(duration: 1.8)
+                        .repeatForever(autoreverses: false)
                     ) {
                         scanLineOffset = -start
                     }

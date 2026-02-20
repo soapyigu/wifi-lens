@@ -28,6 +28,10 @@ final class DataScannerModel {
     func stopScanning() {
         scannerVC?.stopScanning()
     }
+
+    func updateRegionOfInterest(_ rect: CGRect) {
+        scannerVC?.regionOfInterest = rect
+    }
 }
 
 // MARK: - DataScannerView

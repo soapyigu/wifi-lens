@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:nemecek.be)",
+      "WebFetch(domain:markoengelman.com)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
