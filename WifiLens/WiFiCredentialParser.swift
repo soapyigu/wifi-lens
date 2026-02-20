@@ -40,13 +40,13 @@ struct WiFiCredentialParser {
 
     private static let ssidKeywords: [String] = [
         "ssid", "network name", "wi-fi name", "wifi name",
-        "network", "wireless network", "wlan", "ap name"
+        "network", "wireless network", "wlan", "ap name", "wi-fi", "name", "wifi"
     ]
 
     private static let passwordKeywords: [String] = [
         "password", "pass", "passphrase", "wpa key", "wpa2 key",
         "wpa psk", "wpa2 psk", "key", "wifi password", "wi-fi password",
-        "wireless password", "network key", "security key"
+        "wireless password", "network key", "security key", "pwd"
     ]
 
     // MARK: - Line Normalization

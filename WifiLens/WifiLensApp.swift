@@ -67,6 +67,16 @@ struct WifiLensApp: App {
                 }
                 ConnectingView(networkName: networkName)
             }
+            .task {
+                guard let creds = lastCredentials else {
+                    screen = .connectFail(networkName: networkName, ssid: networkName, password: "")
+                    return
+                }
+                let success = await WiFiConnector.connect(ssid: creds.ssid, password: creds.password)
+                screen = success
+                    ? .connectSuccess(networkName: networkName)
+                    : .connectFail(networkName: networkName, ssid: creds.ssid, password: creds.password)
+            }
 
         case .connectSuccess(let networkName):
             ConnectSuccessView(
