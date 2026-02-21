@@ -7,16 +7,78 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "214C0566-48AC-4687-8D6D-4AB2C248D59B"
+            uuid = "CC9056E9-EAEF-4D44-87B6-4C661B3E516A"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "WifiLens/Utilities/WiFiConnector.swift"
+            filePath = "WifiLens/Utilities/WiFiCredentialParser.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "28"
-            endingLineNumber = "28"
-            landmarkName = "connect(ssid:password:)"
+            startingLineNumber = "42"
+            endingLineNumber = "42"
+            landmarkName = "partialMatch(_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "36BAD0AA-6F86-48A7-B77E-36F2D5C6D1DB"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WifiLens/Components/DataScannerView.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "102"
+            endingLineNumber = "102"
+            landmarkName = "handleItems(_:scanner:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "36BAD0AA-6F86-48A7-B77E-36F2D5C6D1DB - 12223596bbba2127"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for closure #1 () async -&gt; () in WifiLens.DataScannerView.Coordinator.handleItems(_: Swift.Array&lt;VisionKit.RecognizedItem&gt;, scanner: VisionKit.DataScannerViewController) -&gt; ()"
+                  moduleName = "WifiLens.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yigu/Documents/Apps/WifiLens/WifiLens/Components/DataScannerView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "102"
+                  endingLineNumber = "102">
+               </Location>
+               <Location
+                  uuid = "36BAD0AA-6F86-48A7-B77E-36F2D5C6D1DB - 17942c3a58918324"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(4) suspend resume partial function for closure #1 () async -&gt; () in WifiLens.DataScannerView.Coordinator.handleItems(_: Swift.Array&lt;VisionKit.RecognizedItem&gt;, scanner: VisionKit.DataScannerViewController) -&gt; ()"
+                  moduleName = "WifiLens.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yigu/Documents/Apps/WifiLens/WifiLens/Components/DataScannerView.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "102"
+                  endingLineNumber = "102">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "57D1E23B-87D5-420B-B3F9-D35DABE16DEC"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WifiLens/Utilities/WiFiCredentialParser.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "39"
+            endingLineNumber = "39"
+            landmarkName = "partialMatch(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

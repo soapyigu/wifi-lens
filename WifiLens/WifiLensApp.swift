@@ -17,7 +17,7 @@ struct WifiLensApp: App {
     var body: some Scene {
         WindowGroup {
             screenView
-                .animation(.easeInOut(duration: 0.25), value: screen)
+                .animation(.easeInOut(duration: 0.1), value: screen)
         }
     }
 

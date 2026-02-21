@@ -120,11 +120,14 @@ struct ScanningView: View {
             }
         }
         .ignoresSafeArea()
-        .onAppear { scannerModel.startScanning() }
-        .onDisappear { scannerModel.stopScanning() }
-        .onChange(of: scannerModel.detectedCredentials?.ssid) { _, ssid in
-            guard let ssid, let password = scannerModel.detectedCredentials?.password else { return }
-            onCredentialsFound(ssid, password, scannerModel.cameraSnapshot)
+        .onAppear {
+            scannerModel.onCredentialsDetected = { ssid, password, snapshot in
+                onCredentialsFound(ssid, password, snapshot)
+            }
+            scannerModel.startScanning()
+        }
+        .onDisappear {
+            scannerModel.stopScanning()
         }
     }
 }

@@ -15,8 +15,11 @@ import UIKit
 final class DataScannerModel {
     var partialSSID: String?
     var partialPassword: String?
-    var detectedCredentials: (ssid: String, password: String)?
     var cameraSnapshot: UIImage?
+
+    /// Set by ScanningView before scanning starts. Called once when credentials
+    /// are confirmed; cleared immediately to prevent double-firing.
+    var onCredentialsDetected: ((String, String, UIImage?) -> Void)?
 
     weak var scannerVC: DataScannerViewController?
 
@@ -65,6 +68,10 @@ extension DataScannerView {
         var model: DataScannerModel
         private var debounceTask: Task<Void, Never>?
 
+        // Stability: require the same parse result twice before firing the callback.
+        private var candidateCredentials: (ssid: String, password: String)?
+        private var candidateConfirmCount = 0
+
         init(model: DataScannerModel) {
             self.model = model
         }
@@ -86,9 +93,10 @@ extension DataScannerView {
             debounceTask = Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(400))
                 guard !Task.isCancelled else { return }
-                guard model.detectedCredentials == nil else { return }
+                // Callback is cleared after first delivery — skip if already fired.
+                guard self.model.onCredentialsDetected != nil else { return }
 
-                // Sort top-to-bottom so the parser sees lines in reading order
+                // Sort top-to-bottom so the parser sees lines in reading order.
                 let sortedItems = items.sorted {
                     guard case .text(let a) = $0, case .text(let b) = $1 else { return false }
                     return a.bounds.topLeft.y < b.bounds.topLeft.y
@@ -98,21 +106,37 @@ extension DataScannerView {
                 }
 
                 let partial = WiFiCredentialParser.partialMatch(transcripts)
-                model.partialSSID = partial.ssid
-                model.partialPassword = partial.password
+                self.model.partialSSID = partial.ssid
+                self.model.partialPassword = partial.password
 
                 if let credentials = WiFiCredentialParser.parse(transcripts) {
-                    model.cameraSnapshot = captureSnapshot(from: scanner)
-                    model.detectedCredentials = credentials
+                    if credentials.ssid == self.candidateCredentials?.ssid &&
+                       credentials.password == self.candidateCredentials?.password {
+                        self.candidateConfirmCount += 1
+                    } else {
+                        // New result — start fresh.
+                        self.candidateCredentials = credentials
+                        self.candidateConfirmCount = 1
+                    }
+
+                    if self.candidateConfirmCount >= 2 {
+                        let snapshot = self.captureSnapshot(from: scanner)
+                        self.model.cameraSnapshot = snapshot
+                        // Capture and clear the callback atomically to prevent double-firing.
+                        let callback = self.model.onCredentialsDetected
+                        self.model.onCredentialsDetected = nil
+                        callback?(credentials.ssid, credentials.password, snapshot)
+                    }
+                } else {
+                    // OCR lost the text — reset stability counter.
+                    self.candidateCredentials = nil
+                    self.candidateConfirmCount = 0
                 }
             }
         }
 
         private func captureSnapshot(from scanner: DataScannerViewController) -> UIImage? {
-            guard let view = scanner.view else {
-                return nil
-            }
-            
+            guard let view = scanner.view else { return nil }
             let renderer = UIGraphicsImageRenderer(bounds: view.bounds)
             return renderer.image { ctx in
                 view.layer.render(in: ctx.cgContext)
