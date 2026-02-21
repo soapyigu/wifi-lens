@@ -36,7 +36,7 @@ struct ScanningView: View {
     var body: some View {
         ZStack {
             // DataScanner camera feed
-            DataScannerView(model: $scannerModel)
+            DataScannerView(model: scannerModel)
                 .ignoresSafeArea()
 
             // Dark overlay outside the viewfinder cutout

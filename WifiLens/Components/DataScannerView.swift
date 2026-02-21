@@ -37,7 +37,7 @@ final class DataScannerModel {
 // MARK: - DataScannerView
 
 struct DataScannerView: UIViewControllerRepresentable {
-    @Binding var model: DataScannerModel
+    var model: DataScannerModel
 
     func makeUIViewController(context: Context) -> DataScannerViewController {
         let scanner = DataScannerViewController(
@@ -54,7 +54,7 @@ struct DataScannerView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(model: $model)
+        Coordinator(model: model)
     }
 }
 
@@ -62,11 +62,11 @@ struct DataScannerView: UIViewControllerRepresentable {
 
 extension DataScannerView {
     final class Coordinator: NSObject, DataScannerViewControllerDelegate {
-        @Binding var model: DataScannerModel
+        var model: DataScannerModel
         private var debounceTask: Task<Void, Never>?
 
-        init(model: Binding<DataScannerModel>) {
-            self._model = model
+        init(model: DataScannerModel) {
+            self.model = model
         }
 
         func dataScanner(_ dataScanner: DataScannerViewController,
@@ -88,7 +88,12 @@ extension DataScannerView {
                 guard !Task.isCancelled else { return }
                 guard model.detectedCredentials == nil else { return }
 
-                let transcripts: [String] = items.compactMap {
+                // Sort top-to-bottom so the parser sees lines in reading order
+                let sortedItems = items.sorted {
+                    guard case .text(let a) = $0, case .text(let b) = $1 else { return false }
+                    return a.bounds.topLeft.y < b.bounds.topLeft.y
+                }
+                let transcripts: [String] = sortedItems.compactMap {
                     if case .text(let t) = $0 { return t.transcript } else { return nil }
                 }
 

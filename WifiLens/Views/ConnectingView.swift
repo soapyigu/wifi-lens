@@ -28,7 +28,7 @@ struct ConnectingView: View {
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.black.opacity(0.8))
 
-                Text("Your device may prompt you\nto confirm the connection.")
+                Text("Approve the prompt on your device,\nthen we'll verify the connection.")
                     .font(.system(size: 13))
                     .foregroundColor(.black.opacity(0.6))
                     .multilineTextAlignment(.center)

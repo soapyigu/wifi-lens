@@ -18,8 +18,11 @@ struct WiFiCredentialParser {
         let lines = normalizedLines(from: transcripts)
         guard let (ssid, ssidLineIdx) = extractValueWithLineIndex(for: ssidKeywords, in: lines) else { return nil }
 
-        let passwordLines = Array(lines[ssidLineIdx...])
-        guard let password = extractValue(for: passwordKeywords, in: passwordLines) else { return nil }
+        // Primary: search at or after the SSID line (correct reading order)
+        // Fallback: search before the SSID line (handles OCR returning items out of order)
+        let password = extractValue(for: passwordKeywords, in: Array(lines[ssidLineIdx...]))
+                    ?? extractValue(for: passwordKeywords, in: Array(lines[..<ssidLineIdx]))
+        guard let password else { return nil }
 
         guard ssid.count >= 2,
               password.count >= 8,
