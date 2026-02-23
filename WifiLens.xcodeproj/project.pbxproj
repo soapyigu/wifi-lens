@@ -13,6 +13,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0BD959402F46C57200374EC6 /* WifiLens */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = WifiLens;
 			sourceTree = "<group>";
 		};
@@ -64,8 +66,6 @@
 				0BD959402F46C57200374EC6 /* WifiLens */,
 			);
 			name = WifiLens;
-			packageProductDependencies = (
-			);
 			productName = WifiLens;
 			productReference = 0BD9593E2F46C57200374EC6 /* WifiLens.app */;
 			productType = "com.apple.product-type.application";
@@ -279,7 +279,6 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -316,7 +315,6 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};

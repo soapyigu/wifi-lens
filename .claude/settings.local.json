@@ -7,7 +7,9 @@
       "WebFetch(domain:github.com)",
       "Bash(git restore:*)",
       "Bash(brew install:*)",
-      "Bash(fastlane beta:*)"
+      "Bash(fastlane beta:*)",
+      "Bash(xcode-select:*)",
+      "Bash(xcodebuild:*)"
     ]
   }
 }

@@ -4,19 +4,28 @@ platform :ios do
 
   desc "Build and upload to TestFlight"
   lane :beta do
-    # Bump build number automatically from latest TestFlight build
-    increment_build_number(
-      build_number: latest_testflight_build_number + 1
+    # Use Unix timestamp as build number — unique every second, no versioning setup needed
+    build_number = Time.now.to_i.to_s
+
+    # Ensure automatic code signing is active
+    update_code_signing_settings(
+      use_automatic_signing: true,
+      team_id: "44JDRP3T56",
+      bundle_identifier: "ddy.WifiLens"
     )
 
-    # Build the app for distribution
     build_app(
       scheme: "WifiLens",
-      export_method: "app-store",
-      clean: true
+      export_method: "app-store-connect",
+      clean: true,
+      xcargs: "CURRENT_PROJECT_VERSION=#{build_number} -allowProvisioningUpdates",
+      export_options: {
+        method: "app-store-connect",
+        signingStyle: "automatic",
+        teamID: "44JDRP3T56"
+      }
     )
 
-    # Upload to TestFlight (no changelog required for internal testers)
     upload_to_testflight(
       skip_waiting_for_build_processing: true
     )
