@@ -1,0 +1,25 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    # Bump build number automatically from latest TestFlight build
+    increment_build_number(
+      build_number: latest_testflight_build_number + 1
+    )
+
+    # Build the app for distribution
+    build_app(
+      scheme: "WifiLens",
+      export_method: "app-store",
+      clean: true
+    )
+
+    # Upload to TestFlight (no changelog required for internal testers)
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+end

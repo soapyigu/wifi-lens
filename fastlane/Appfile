@@ -1,0 +1,4 @@
+app_identifier("ddy.WifiLens")
+apple_id("soapyigu@gmail.com")
+itc_team_id("") # Leave blank — fastlane will auto-detect from your account
+team_id("")     # Leave blank — fastlane will auto-detect from your account

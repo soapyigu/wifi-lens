@@ -5,7 +5,9 @@
       "WebFetch(domain:nemecek.be)",
       "WebFetch(domain:markoengelman.com)",
       "WebFetch(domain:github.com)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(brew install:*)",
+      "Bash(fastlane beta:*)"
     ]
   }
 }
