@@ -16,11 +16,12 @@ platform :ios do
 
     build_app(
       scheme: "WifiLens",
-      export_method: "app-store-connect",
+      export_method: "app-store",
       clean: true,
       xcargs: "CURRENT_PROJECT_VERSION=#{build_number} -allowProvisioningUpdates",
+      export_xcargs: "-allowProvisioningUpdates",
       export_options: {
-        method: "app-store-connect",
+        method: "app-store",
         signingStyle: "automatic",
         teamID: "44JDRP3T56"
       }

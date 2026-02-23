@@ -1,0 +1,15 @@
+# Build artifacts
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Fastlane build reports
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Xcode user-specific files
+*.xcuserstate
+xcuserdata/
+*.xcschememanagement.plist
