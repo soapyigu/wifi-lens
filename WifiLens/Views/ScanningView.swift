@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import VisionKit
 import UIKit
 
 struct ScanningView: View {

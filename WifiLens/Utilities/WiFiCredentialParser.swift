@@ -69,9 +69,8 @@ struct WiFiCredentialParser {
     /// Same as extractValue but also returns the line index where the keyword was found.
     private static func extractValueWithLineIndex(for keywords: [String], in lines: [String]) -> (String, Int)? {
         for (index, line) in lines.enumerated() {
-            let lowered = line.lowercased()
             for keyword in keywords {
-                guard let keyRange = lowered.range(of: keyword) else { continue }
+                guard let keyRange = line.range(of: keyword, options: .caseInsensitive) else { continue }
 
                 let afterKeyword = String(line[keyRange.upperBound...])
                     .trimmingCharacters(in: .whitespaces)
@@ -99,9 +98,8 @@ struct WiFiCredentialParser {
 
     private static func extractValue(for keywords: [String], in lines: [String]) -> String? {
         for (index, line) in lines.enumerated() {
-            let lowered = line.lowercased()
             for keyword in keywords {
-                guard let keyRange = lowered.range(of: keyword) else { continue }
+                guard let keyRange = line.range(of: keyword, options: .caseInsensitive) else { continue }
 
                 let afterKeyword = String(line[keyRange.upperBound...])
                     .trimmingCharacters(in: .whitespaces)
@@ -139,10 +137,9 @@ struct WiFiCredentialParser {
     /// Truncates value at the next "keyword:" boundary on the same line.
     /// e.g. "Coffee_Bar! pwd: 123@5pay?" → "Coffee_Bar!"
     private static func trimAtNextField(_ value: String) -> String {
-        let valueLower = value.lowercased()
         var truncateAt = value.endIndex
         for kw in ssidKeywords + passwordKeywords {
-            if let kwRange = valueLower.range(of: kw) {
+            if let kwRange = value.range(of: kw, options: .caseInsensitive) {
                 let afterKw = String(value[kwRange.upperBound...]).trimmingCharacters(in: .whitespaces)
                 if afterKw.hasPrefix(":") || afterKw.hasPrefix("=") {
                     if kwRange.lowerBound < truncateAt {

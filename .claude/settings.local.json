@@ -4,7 +4,8 @@
       "WebSearch",
       "WebFetch(domain:nemecek.be)",
       "WebFetch(domain:markoengelman.com)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(git restore:*)"
     ]
   }
 }

@@ -6,7 +6,8 @@
 //
 
 import SwiftUI
-import VisionKit
+import AVFoundation
+import Vision
 import UIKit
 
 // MARK: - DataScannerModel
@@ -21,19 +22,172 @@ final class DataScannerModel {
     /// are confirmed; cleared immediately to prevent double-firing.
     var onCredentialsDetected: ((String, String, UIImage?) -> Void)?
 
-    weak var scannerVC: DataScannerViewController?
+    weak var scannerVC: VisionScannerViewController?
 
     func startScanning() {
-        guard let vc = scannerVC else { return }
-        try? vc.startScanning()
+        scannerVC?.startSession()
     }
 
     func stopScanning() {
-        scannerVC?.stopScanning()
+        scannerVC?.stopSession()
     }
 
     func updateRegionOfInterest(_ rect: CGRect) {
-        scannerVC?.regionOfInterest = rect
+        scannerVC?.setRegionOfInterest(rect)
+    }
+}
+
+// MARK: - VisionScannerViewController
+
+final class VisionScannerViewController: UIViewController,
+                                          AVCaptureVideoDataOutputSampleBufferDelegate {
+    var onObservations: (([VNRecognizedTextObservation]) -> Void)?
+
+    private let session      = AVCaptureSession()
+    private var previewLayer: AVCaptureVideoPreviewLayer!
+    private let videoOutput  = AVCaptureVideoDataOutput()
+    private let sessionQueue = DispatchQueue(label: "com.wifilens.session")
+    private let visionQueue  = DispatchQueue(label: "com.wifilens.vision")
+    private var frameCounter = 0
+    private let frameSkip    = 5           // ~6 recognitions/sec from 30fps
+
+    // Both read and written only on sessionQueue — no data race
+    private var cachedVisionROI: CGRect?
+    // Written and read only on main thread
+    private var pendingScreenROI: CGRect?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupCaptureSession()
+        setupPreviewLayer()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // FIX 4: guard against force-unwrap crash when called before viewDidLoad
+        guard previewLayer != nil else { return }
+        previewLayer.frame = view.bounds
+        if let pending = pendingScreenROI {
+            pendingScreenROI = nil
+            setRegionOfInterest(pending)
+        }
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopSession()
+    }
+
+    // MARK: - Setup
+
+    private func setupCaptureSession() {
+        session.sessionPreset = .photo
+
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera,
+                                                    for: .video,
+                                                    position: .back),
+              let input = try? AVCaptureDeviceInput(device: device),
+              session.canAddInput(input) else { return }
+        session.addInput(input)
+
+        videoOutput.alwaysDiscardsLateVideoFrames = true
+        videoOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+        ]
+        videoOutput.setSampleBufferDelegate(self, queue: sessionQueue)
+
+        guard session.canAddOutput(videoOutput) else { return }
+        session.addOutput(videoOutput)
+
+        // FIX 3: use videoRotationAngle instead of deprecated videoOrientation
+        videoOutput.connection(with: .video)?.videoRotationAngle = 90
+    }
+
+    private func setupPreviewLayer() {
+        previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.frame = view.bounds
+        view.layer.insertSublayer(previewLayer, at: 0)
+    }
+
+    // MARK: - Session control
+
+    func startSession() {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        switch status {
+        case .authorized:
+            sessionQueue.async { self.session.startRunning() }
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                if granted {
+                    self.sessionQueue.async { self.session.startRunning() }
+                }
+            }
+        default:
+            break
+        }
+    }
+
+    func stopSession() {
+        sessionQueue.async { self.session.stopRunning() }
+    }
+
+    // MARK: - Region of interest
+
+    func setRegionOfInterest(_ screenRect: CGRect) {
+        guard previewLayer != nil, previewLayer.bounds != .zero else {
+            pendingScreenROI = screenRect
+            return
+        }
+        let layerRect = previewLayer.convert(screenRect, from: nil)
+        let meta = previewLayer.metadataOutputRectConverted(fromLayerRect: layerRect)
+        // Flip Y (meta is top-left origin, Vision is bottom-left), then clamp to [0,1]
+        let newROI = CGRect(
+            x: max(0, meta.minX),
+            y: max(0, 1 - meta.maxY),
+            width:  min(1, meta.width),
+            height: min(1, meta.height)
+        ).intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
+        // FIX 2: write on sessionQueue so captureOutput reads on the same queue — no data race
+        sessionQueue.async { self.cachedVisionROI = newROI.isEmpty ? nil : newROI }
+    }
+
+    // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
+
+    func captureOutput(_ output: AVCaptureOutput,
+                       didOutput sampleBuffer: CMSampleBuffer,
+                       from connection: AVCaptureConnection) {
+        frameCounter += 1
+        guard frameCounter % frameSkip == 0 else { return }
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        let roi = cachedVisionROI   // safe: read on sessionQueue, same queue as write
+
+        visionQueue.async {
+            let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer,
+                                                orientation: .right,
+                                                options: [:])
+            let req = VNRecognizeTextRequest()
+            req.recognitionLevel = .accurate
+            req.usesLanguageCorrection = false
+            req.minimumTextHeight = 0.02
+            req.recognitionLanguages = ["en-US"]
+            // FIX 1: validate all coordinates before setting — invalid rects cause NSException
+            // which try? does NOT catch, crashing the app
+            if let roi,
+               roi.minX >= 0, roi.minY >= 0,
+               roi.maxX <= 1, roi.maxY <= 1,
+               roi.width > 0, roi.height > 0 {
+                req.regionOfInterest = roi
+            }
+            try? handler.perform([req])
+
+            let results = (req.results ?? [])
+                .filter { $0.topCandidates(1).first?.confidence ?? 0 >= 0.5 }
+                .sorted { $0.boundingBox.minY > $1.boundingBox.minY }  // top-to-bottom
+
+            // FIX 5: [weak self] prevents retain cycle when VC is dismissed mid-flight
+            DispatchQueue.main.async { [weak self] in self?.onObservations?(results) }
+        }
     }
 }
 
@@ -42,19 +196,17 @@ final class DataScannerModel {
 struct DataScannerView: UIViewControllerRepresentable {
     var model: DataScannerModel
 
-    func makeUIViewController(context: Context) -> DataScannerViewController {
-        let scanner = DataScannerViewController(
-            recognizedDataTypes: [.text()],
-            qualityLevel: .accurate,
-            recognizesMultipleItems: true,
-            isGuidanceEnabled: false, isHighlightingEnabled: false
-        )
-        scanner.delegate = context.coordinator
-        context.coordinator.model.scannerVC = scanner
-        return scanner
+    func makeUIViewController(context: Context) -> VisionScannerViewController {
+        let vc = VisionScannerViewController()
+        let coordinator = context.coordinator
+        vc.onObservations = { [weak coordinator] obs in
+            coordinator?.handleObservations(obs, scanner: vc)
+        }
+        context.coordinator.model.scannerVC = vc
+        return vc
     }
 
-    func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: VisionScannerViewController, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
         Coordinator(model: model)
@@ -64,9 +216,8 @@ struct DataScannerView: UIViewControllerRepresentable {
 // MARK: - Coordinator
 
 extension DataScannerView {
-    final class Coordinator: NSObject, DataScannerViewControllerDelegate {
+    final class Coordinator: NSObject {
         var model: DataScannerModel
-        private var debounceTask: Task<Void, Never>?
 
         // Stability: require the same parse result twice before firing the callback.
         private var candidateCredentials: (ssid: String, password: String)?
@@ -76,66 +227,46 @@ extension DataScannerView {
             self.model = model
         }
 
-        func dataScanner(_ dataScanner: DataScannerViewController,
-                         didAdd addedItems: [RecognizedItem],
-                         allItems: [RecognizedItem]) {
-            handleItems(allItems, scanner: dataScanner)
-        }
+        func handleObservations(_ observations: [VNRecognizedTextObservation],
+                                scanner: VisionScannerViewController) {
+            // No debounce needed: each Vision request returns the complete text set for
+            // that frame in one shot (not incremental). Processing synchronously on the
+            // main thread is safe — onObservations is already dispatched to main.
+            guard model.onCredentialsDetected != nil else { return }
 
-        func dataScanner(_ dataScanner: DataScannerViewController,
-                         didUpdate updatedItems: [RecognizedItem],
-                         allItems: [RecognizedItem]) {
-            handleItems(allItems, scanner: dataScanner)
-        }
+            // Observations arrive pre-sorted top-to-bottom, pre-filtered by confidence
+            let transcripts = observations.compactMap { $0.topCandidates(1).first?.string }
 
-        private func handleItems(_ items: [RecognizedItem], scanner: DataScannerViewController) {
-            debounceTask?.cancel()
-            debounceTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(400))
-                guard !Task.isCancelled else { return }
-                // Callback is cleared after first delivery — skip if already fired.
-                guard self.model.onCredentialsDetected != nil else { return }
+            let partial = WiFiCredentialParser.partialMatch(transcripts)
+            model.partialSSID    = partial.ssid
+            model.partialPassword = partial.password
 
-                // Sort top-to-bottom so the parser sees lines in reading order.
-                let sortedItems = items.sorted {
-                    guard case .text(let a) = $0, case .text(let b) = $1 else { return false }
-                    return a.bounds.topLeft.y < b.bounds.topLeft.y
-                }
-                let transcripts: [String] = sortedItems.compactMap {
-                    if case .text(let t) = $0 { return t.transcript } else { return nil }
-                }
-
-                let partial = WiFiCredentialParser.partialMatch(transcripts)
-                self.model.partialSSID = partial.ssid
-                self.model.partialPassword = partial.password
-
-                if let credentials = WiFiCredentialParser.parse(transcripts) {
-                    if credentials.ssid == self.candidateCredentials?.ssid &&
-                       credentials.password == self.candidateCredentials?.password {
-                        self.candidateConfirmCount += 1
-                    } else {
-                        // New result — start fresh.
-                        self.candidateCredentials = credentials
-                        self.candidateConfirmCount = 1
-                    }
-
-                    if self.candidateConfirmCount >= 2 {
-                        let snapshot = self.captureSnapshot(from: scanner)
-                        self.model.cameraSnapshot = snapshot
-                        // Capture and clear the callback atomically to prevent double-firing.
-                        let callback = self.model.onCredentialsDetected
-                        self.model.onCredentialsDetected = nil
-                        callback?(credentials.ssid, credentials.password, snapshot)
-                    }
+            if let credentials = WiFiCredentialParser.parse(transcripts) {
+                if credentials.ssid == candidateCredentials?.ssid &&
+                   credentials.password == candidateCredentials?.password {
+                    candidateConfirmCount += 1
                 } else {
-                    // OCR lost the text — reset stability counter.
-                    self.candidateCredentials = nil
-                    self.candidateConfirmCount = 0
+                    // New result — start fresh.
+                    candidateCredentials = credentials
+                    candidateConfirmCount = 1
                 }
+
+                if candidateConfirmCount >= 2 {
+                    let snapshot = captureSnapshot(from: scanner)
+                    model.cameraSnapshot = snapshot
+                    // Capture and clear the callback atomically to prevent double-firing.
+                    let callback = model.onCredentialsDetected
+                    model.onCredentialsDetected = nil
+                    callback?(credentials.ssid, credentials.password, snapshot)
+                }
+            } else {
+                // OCR lost the text — reset stability counter.
+                candidateCredentials = nil
+                candidateConfirmCount = 0
             }
         }
 
-        private func captureSnapshot(from scanner: DataScannerViewController) -> UIImage? {
+        private func captureSnapshot(from scanner: VisionScannerViewController) -> UIImage? {
             guard let view = scanner.view else { return nil }
             let renderer = UIGraphicsImageRenderer(bounds: view.bounds)
             return renderer.image { ctx in
