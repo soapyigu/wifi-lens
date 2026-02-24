@@ -257,6 +257,8 @@ extension DataScannerView {
                     // Capture and clear the callback atomically to prevent double-firing.
                     let callback = model.onCredentialsDetected
                     model.onCredentialsDetected = nil
+                    // Stop the camera immediately — don't wait for onDisappear.
+                    scanner.stopSession()
                     callback?(credentials.ssid, credentials.password, snapshot)
                 }
             } else {
