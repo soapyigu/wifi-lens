@@ -170,7 +170,7 @@ final class VisionScannerViewController: UIViewController,
             req.recognitionLevel = .accurate
             req.usesLanguageCorrection = false
             req.minimumTextHeight = 0.02
-            req.recognitionLanguages = ["en-US"]
+            req.recognitionLanguages = ["zh-Hans", "zh-Hant", "ja", "ko", "en-US"]
             // FIX 1: validate all coordinates before setting — invalid rects cause NSException
             // which try? does NOT catch, crashing the app
             if let roi,

@@ -9,13 +9,22 @@ import SwiftUI
 import UIKit
 
 struct FoundDetailsView: View {
-    var networkName: String
-    var password: String
     var backgroundImage: UIImage?
     var onRescan: () -> Void
-    var onConnect: () -> Void
+    var onConnect: (String, String) -> Void
 
+    @State private var networkName: String
+    @State private var password: String
     @State private var isPasswordVisible = false
+
+    init(networkName: String, password: String, backgroundImage: UIImage? = nil,
+         onRescan: @escaping () -> Void, onConnect: @escaping (String, String) -> Void) {
+        _networkName = State(initialValue: networkName)
+        _password = State(initialValue: password)
+        self.backgroundImage = backgroundImage
+        self.onRescan = onRescan
+        self.onConnect = onConnect
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -68,9 +77,11 @@ struct FoundDetailsView: View {
                     Text("Network Name")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
-                    Text(networkName)
+                    TextField("Network Name", text: $networkName)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
                 }
                 .padding(.bottom, 16)
 
@@ -81,11 +92,13 @@ struct FoundDetailsView: View {
                         .foregroundColor(.secondary)
                     HStack {
                         if isPasswordVisible {
-                            Text(password)
+                            TextField("Password", text: $password)
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.primary)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
                         } else {
-                            Text(String(repeating: "•", count: password.count))
+                            SecureField("Password", text: $password)
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.primary)
                         }
@@ -121,7 +134,7 @@ struct FoundDetailsView: View {
                             .cornerRadius(14)
                     }
 
-                    Button(action: onConnect) {
+                    Button(action: { onConnect(networkName, password) }) {
                         Text("Connect")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
@@ -169,6 +182,6 @@ private struct RoundedCorner: Shape {
         password: "mypassword123",
         backgroundImage: nil,
         onRescan: {},
-        onConnect: {}
+        onConnect: { _, _ in }
     )
 }

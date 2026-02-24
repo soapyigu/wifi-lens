@@ -46,13 +46,25 @@ struct WiFiCredentialParser {
 
     private static let ssidKeywords: [String] = [
         "ssid", "network name", "wi-fi name", "wifi name",
-        "network", "wireless network", "wlan", "ap name", "wi-fi", "name", "wifi"
+        "network", "wireless network", "wlan", "ap name", "wi-fi", "name", "wifi",
+        // Chinese
+        "网络名称", "无线网络名称", "wifi名称", "网络名", "ssid名称",
+        // Japanese
+        "ネットワーク名", "wi-fi名",
+        // Korean
+        "네트워크 이름", "wi-fi 이름"
     ]
 
     private static let passwordKeywords: [String] = [
         "password", "pass", "passphrase", "wpa key", "wpa2 key",
         "wpa psk", "wpa2 psk", "key", "wifi password", "wi-fi password",
-        "wireless password", "network key", "security key", "pwd"
+        "wireless password", "network key", "security key", "pwd",
+        // Chinese
+        "密码", "无线密码", "wifi密码", "网络密钥", "安全密钥",
+        // Japanese
+        "パスワード", "暗号化キー", "セキュリティキー",
+        // Korean
+        "비밀번호", "보안 키"
     ]
 
     // MARK: - Line Normalization
@@ -60,7 +72,10 @@ struct WiFiCredentialParser {
     private static func normalizedLines(from transcripts: [String]) -> [String] {
         transcripts
             .flatMap { $0.components(separatedBy: "\n") }
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                  .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            }
             .filter { !$0.isEmpty }
     }
 

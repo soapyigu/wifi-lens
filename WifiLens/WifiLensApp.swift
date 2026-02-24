@@ -49,8 +49,9 @@ struct WifiLensApp: App {
                     lastCredentials = nil
                     screen = .scanning
                 },
-                onConnect: {
-                    screen = .connecting(networkName: ssid)
+                onConnect: { editedSSID, editedPassword in
+                    lastCredentials = (editedSSID, editedPassword)
+                    screen = .connecting(networkName: editedSSID)
                 }
             )
 
@@ -62,7 +63,7 @@ struct WifiLensApp: App {
                         password: creds.password,
                         backgroundImage: lastSnapshot,
                         onRescan: { },
-                        onConnect: { }
+                        onConnect: { _, _ in }
                     )
                 }
                 ConnectingView(networkName: networkName)
