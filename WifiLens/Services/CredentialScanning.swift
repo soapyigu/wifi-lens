@@ -16,6 +16,11 @@ protocol CredentialScanning: AnyObject {
 final class LiveCredentialScanner: CredentialScanning {
     private(set) var partialSSID: String?
     private(set) var partialPassword: String?
+    /// Monotonic best-so-far within a session. Reset on start(); never
+    /// reverts to false once a candidate is observed. Drives the
+    /// scanning-status UI so it doesn't flicker frame-to-frame.
+    private(set) var hasEverSeenSSID: Bool = false
+    private(set) var hasEverSeenPassword: Bool = false
     var onCredentialsDetected: ((Credentials, UIImage?) -> Void)?
 
     let viewController: VisionScannerViewController
@@ -34,6 +39,8 @@ final class LiveCredentialScanner: CredentialScanning {
     }
 
     func start() {
+        hasEverSeenSSID = false
+        hasEverSeenPassword = false
         viewController.startSession()
     }
 
@@ -53,6 +60,8 @@ final class LiveCredentialScanner: CredentialScanning {
         let partial = parser.partialMatch(transcripts)
         partialSSID = partial.ssid
         partialPassword = partial.password
+        if partial.ssid != nil { hasEverSeenSSID = true }
+        if partial.password != nil { hasEverSeenPassword = true }
 
         guard let credentials = parser.parse(transcripts) else {
             candidate = nil

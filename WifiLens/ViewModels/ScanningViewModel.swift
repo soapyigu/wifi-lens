@@ -1,5 +1,12 @@
 import UIKit
 
+enum ScanningStatus {
+    case looking
+    case sawSSID
+    case sawPassword
+    case both
+}
+
 @MainActor
 @Observable
 final class ScanningViewModel {
@@ -7,6 +14,15 @@ final class ScanningViewModel {
 
     var partialSSID: String? { scanner.partialSSID }
     var partialPassword: String? { scanner.partialPassword }
+
+    var status: ScanningStatus {
+        switch (scanner.hasEverSeenSSID, scanner.hasEverSeenPassword) {
+        case (false, false): return .looking
+        case (true,  false): return .sawSSID
+        case (false, true):  return .sawPassword
+        case (true,  true):  return .both
+        }
+    }
 
     var onCredentialsFound: ((String, String, UIImage?) -> Void)?
 

@@ -29,14 +29,14 @@ struct ScanningView: View {
     private let cornerLineWidth: CGFloat = 4
 
     private var scanningStatusText: String {
-        switch (vm.partialSSID, vm.partialPassword) {
-        case (nil, nil):
+        switch vm.status {
+        case .looking:
             return "Looking for Wi-Fi name\nand password..."
-        case (.some, nil):
+        case .sawSSID:
             return "Found network name —\nlooking for password..."
-        case (nil, .some):
+        case .sawPassword:
             return "Found password —\nlooking for network name..."
-        default:
+        case .both:
             return "Found Wi-Fi details!"
         }
     }
