@@ -36,6 +36,11 @@ struct WiFiCredentialParser {
     /// Partial match — used to update "still scanning" UI indicators.
     static func partialMatch(_ transcripts: [String]) -> (ssid: String?, password: String?) {
         let lines = normalizedLines(from: transcripts)
+        
+        guard !lines.isEmpty else {
+            return (ssid: nil, password: nil)
+        }
+        
         return (
             ssid: extractValue(for: ssidKeywords, in: lines),
             password: extractValue(for: passwordKeywords, in: lines)
@@ -46,25 +51,13 @@ struct WiFiCredentialParser {
 
     private static let ssidKeywords: [String] = [
         "ssid", "network name", "wi-fi name", "wifi name",
-        "network", "wireless network", "wlan", "ap name", "wi-fi", "name", "wifi",
-        // Chinese
-        "网络名称", "无线网络名称", "wifi名称", "网络名", "ssid名称",
-        // Japanese
-        "ネットワーク名", "wi-fi名",
-        // Korean
-        "네트워크 이름", "wi-fi 이름"
+        "network", "wireless network", "wlan", "ap name", "wi-fi", "name", "wifi"
     ]
 
     private static let passwordKeywords: [String] = [
         "password", "pass", "passphrase", "wpa key", "wpa2 key",
         "wpa psk", "wpa2 psk", "key", "wifi password", "wi-fi password",
-        "wireless password", "network key", "security key", "pwd",
-        // Chinese
-        "密码", "无线密码", "wifi密码", "网络密钥", "安全密钥",
-        // Japanese
-        "パスワード", "暗号化キー", "セキュリティキー",
-        // Korean
-        "비밀번호", "보안 키"
+        "wireless password", "network key", "security key", "pwd"
     ]
 
     // MARK: - Line Normalization
