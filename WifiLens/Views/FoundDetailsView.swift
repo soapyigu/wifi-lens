@@ -13,21 +13,19 @@ struct FoundDetailsView: View {
     var onRescan: () -> Void
     var onConnect: (String, String) -> Void
 
-    @State private var networkName: String
-    @State private var password: String
-    @State private var isPasswordVisible = false
+    @State private var vm: FoundDetailsViewModel
 
     init(networkName: String, password: String, backgroundImage: UIImage? = nil,
          onRescan: @escaping () -> Void, onConnect: @escaping (String, String) -> Void) {
-        _networkName = State(initialValue: networkName)
-        _password = State(initialValue: password)
+        _vm = State(initialValue: FoundDetailsViewModel(ssid: networkName, password: password))
         self.backgroundImage = backgroundImage
         self.onRescan = onRescan
         self.onConnect = onConnect
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        @Bindable var vm = vm
+        return ZStack(alignment: .bottom) {
             // Blurred camera snapshot background
             Group {
                 if let image = backgroundImage {
@@ -77,7 +75,7 @@ struct FoundDetailsView: View {
                     Text("Network Name")
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
-                    TextField("Network Name", text: $networkName)
+                    TextField("Network Name", text: $vm.networkName)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
                         .autocorrectionDisabled()
@@ -91,20 +89,20 @@ struct FoundDetailsView: View {
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
                     HStack {
-                        if isPasswordVisible {
-                            TextField("Password", text: $password)
+                        if vm.isPasswordVisible {
+                            TextField("Password", text: $vm.password)
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.primary)
                                 .autocorrectionDisabled()
                                 .textInputAutocapitalization(.never)
                         } else {
-                            SecureField("Password", text: $password)
+                            SecureField("Password", text: $vm.password)
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.primary)
                         }
                         Spacer()
-                        Button(action: { isPasswordVisible.toggle() }) {
-                            Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
+                        Button(action: { vm.isPasswordVisible.toggle() }) {
+                            Image(systemName: vm.isPasswordVisible ? "eye.slash" : "eye")
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -134,7 +132,7 @@ struct FoundDetailsView: View {
                             .cornerRadius(14)
                     }
 
-                    Button(action: { onConnect(networkName, password) }) {
+                    Button(action: { onConnect(vm.networkName, vm.password) }) {
                         Text("Connect")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)

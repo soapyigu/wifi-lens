@@ -10,33 +10,6 @@ import AVFoundation
 import Vision
 import UIKit
 
-// MARK: - DataScannerModel
-
-@Observable
-final class DataScannerModel {
-    var partialSSID: String?
-    var partialPassword: String?
-    var cameraSnapshot: UIImage?
-
-    /// Set by ScanningView before scanning starts. Called once when credentials
-    /// are confirmed; cleared immediately to prevent double-firing.
-    var onCredentialsDetected: ((String, String, UIImage?) -> Void)?
-
-    weak var scannerVC: VisionScannerViewController?
-
-    func startScanning() {
-        scannerVC?.startSession()
-    }
-
-    func stopScanning() {
-        scannerVC?.stopSession()
-    }
-
-    func updateRegionOfInterest(_ rect: CGRect) {
-        scannerVC?.setRegionOfInterest(rect)
-    }
-}
-
 // MARK: - VisionScannerViewController
 
 final class VisionScannerViewController: UIViewController,
@@ -194,86 +167,11 @@ final class VisionScannerViewController: UIViewController,
 // MARK: - DataScannerView
 
 struct DataScannerView: UIViewControllerRepresentable {
-    var model: DataScannerModel
+    let controller: UIViewController
 
-    func makeUIViewController(context: Context) -> VisionScannerViewController {
-        let vc = VisionScannerViewController()
-        let coordinator = context.coordinator
-        vc.onObservations = { [weak coordinator] obs in
-            coordinator?.handleObservations(obs, scanner: vc)
-        }
-        context.coordinator.model.scannerVC = vc
-        return vc
+    func makeUIViewController(context: Context) -> UIViewController {
+        controller
     }
 
-    func updateUIViewController(_ uiViewController: VisionScannerViewController, context: Context) {}
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(model: model)
-    }
-}
-
-// MARK: - Coordinator
-
-extension DataScannerView {
-    final class Coordinator: NSObject {
-        var model: DataScannerModel
-
-        // Stability: require the same parse result twice before firing the callback.
-        private var candidateCredentials: (ssid: String, password: String)?
-        private var candidateConfirmCount = 0
-
-        init(model: DataScannerModel) {
-            self.model = model
-        }
-
-        func handleObservations(_ observations: [VNRecognizedTextObservation],
-                                scanner: VisionScannerViewController) {
-            // No debounce needed: each Vision request returns the complete text set for
-            // that frame in one shot (not incremental). Processing synchronously on the
-            // main thread is safe — onObservations is already dispatched to main.
-            guard model.onCredentialsDetected != nil else { return }
-
-            // Observations arrive pre-sorted top-to-bottom, pre-filtered by confidence
-            let transcripts = observations.compactMap { $0.topCandidates(1).first?.string }
-
-            let partial = WiFiCredentialParser.partialMatch(transcripts)
-            model.partialSSID    = partial.ssid
-            model.partialPassword = partial.password
-
-            if let credentials = WiFiCredentialParser.parse(transcripts) {
-                if credentials.ssid == candidateCredentials?.ssid &&
-                   credentials.password == candidateCredentials?.password {
-                    candidateConfirmCount += 1
-                } else {
-                    // New result — start fresh.
-                    candidateCredentials = credentials
-                    candidateConfirmCount = 1
-                }
-
-                if candidateConfirmCount >= 2 {
-                    let snapshot = captureSnapshot(from: scanner)
-                    model.cameraSnapshot = snapshot
-                    // Capture and clear the callback atomically to prevent double-firing.
-                    let callback = model.onCredentialsDetected
-                    model.onCredentialsDetected = nil
-                    // Stop the camera immediately — don't wait for onDisappear.
-                    scanner.stopSession()
-                    callback?(credentials.ssid, credentials.password, snapshot)
-                }
-            } else {
-                // OCR lost the text — reset stability counter.
-                candidateCredentials = nil
-                candidateConfirmCount = 0
-            }
-        }
-
-        private func captureSnapshot(from scanner: VisionScannerViewController) -> UIImage? {
-            guard let view = scanner.view else { return nil }
-            let renderer = UIGraphicsImageRenderer(bounds: view.bounds)
-            return renderer.image { ctx in
-                view.layer.render(in: ctx.cgContext)
-            }
-        }
-    }
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }

@@ -12,15 +12,24 @@ struct ScanningView: View {
     var onCancel: () -> Void
     var onCredentialsFound: (String, String, UIImage?) -> Void
 
-    @State private var scannerModel = DataScannerModel()
+    @State private var vm: ScanningViewModel
     @State private var scanLineOffset: CGFloat = 0
+
+    init(onCancel: @escaping () -> Void,
+         onCredentialsFound: @escaping (String, String, UIImage?) -> Void) {
+        _vm = State(initialValue: ScanningViewModel(
+            scanner: LiveCredentialScanner(parser: LiveCredentialParser())
+        ))
+        self.onCancel = onCancel
+        self.onCredentialsFound = onCredentialsFound
+    }
 
     private let viewfinderSize: CGFloat = 260
     private let cornerLength: CGFloat = 28
     private let cornerLineWidth: CGFloat = 4
 
     private var scanningStatusText: String {
-        switch (scannerModel.partialSSID, scannerModel.partialPassword) {
+        switch (vm.partialSSID, vm.partialPassword) {
         case (nil, nil):
             return "Looking for Wi-Fi name\nand password..."
         case (.some, nil):
@@ -34,8 +43,8 @@ struct ScanningView: View {
 
     var body: some View {
         ZStack {
-            // DataScanner camera feed
-            DataScannerView(model: scannerModel)
+            // Camera feed (hosted by the scanner service via VM)
+            DataScannerView(controller: vm.scannerController)
                 .ignoresSafeArea()
 
             // Dark overlay outside the viewfinder cutout
@@ -90,7 +99,7 @@ struct ScanningView: View {
                 .frame(width: viewfinderSize, height: viewfinderSize)
                 .clipped()
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
-                    scannerModel.updateRegionOfInterest(frame)
+                    vm.updateRegionOfInterest(frame)
                 }
                 .onAppear {
                     let start = -(viewfinderSize / 2 - 4)
@@ -120,13 +129,11 @@ struct ScanningView: View {
         }
         .ignoresSafeArea()
         .onAppear {
-            scannerModel.onCredentialsDetected = { ssid, password, snapshot in
-                onCredentialsFound(ssid, password, snapshot)
-            }
-            scannerModel.startScanning()
+            vm.onCredentialsFound = onCredentialsFound
+            vm.start()
         }
         .onDisappear {
-            scannerModel.stopScanning()
+            vm.stop()
         }
     }
 }

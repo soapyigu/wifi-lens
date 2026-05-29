@@ -25,7 +25,7 @@ final class LiveCredentialScanner: CredentialScanning {
     private var candidateConfirmCount = 0
     private let stabilityThreshold = 2
 
-    init(parser: CredentialParsing = LiveCredentialParser()) {
+    init(parser: CredentialParsing) {
         self.parser = parser
         self.viewController = VisionScannerViewController()
         self.viewController.onObservations = { [weak self] observations in
