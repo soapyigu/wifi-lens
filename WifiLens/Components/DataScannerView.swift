@@ -159,7 +159,17 @@ final class VisionScannerViewController: UIViewController,
                 .sorted { $0.boundingBox.minY > $1.boundingBox.minY }  // top-to-bottom
 
             // FIX 5: [weak self] prevents retain cycle when VC is dismissed mid-flight
-            DispatchQueue.main.async { [weak self] in self?.onObservations?(results) }
+            // FIX 6: MainActor.assumeIsolated keeps the callback chain synchronous on
+            // the main actor. Without it, Swift treats this DispatchQueue.main.async
+            // block as nonisolated, inserts an implicit actor hop to reach the
+            // @MainActor onObservations property, and SwiftUI @State mutations made
+            // downstream don't trigger a re-render (visible only under a debugger
+            // pause that flushes the deferred work).
+            DispatchQueue.main.async { [weak self] in
+                MainActor.assumeIsolated {
+                    self?.onObservations?(results)
+                }
+            }
         }
     }
 }
