@@ -36,7 +36,9 @@ struct ScanningView: View {
             return "Found network name —\nlooking for password..."
         case .sawPassword:
             return "Found password —\nlooking for network name..."
-        case .both:
+        case .sawBoth:
+            return "Both fields detected —\nhold steady to confirm..."
+        case .confirmed:
             return "Found Wi-Fi details!"
         }
     }

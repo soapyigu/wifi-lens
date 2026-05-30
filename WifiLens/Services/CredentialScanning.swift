@@ -21,6 +21,11 @@ final class LiveCredentialScanner: CredentialScanning {
     /// scanning-status UI so it doesn't flicker frame-to-frame.
     private(set) var hasEverSeenSSID: Bool = false
     private(set) var hasEverSeenPassword: Bool = false
+    /// Set when parse() returns a validated credential pair at least once.
+    /// Distinguishes "fuzzy keyword match" from "actually extracted values" —
+    /// drives the .confirmed status so the UI doesn't promise an advance the
+    /// parser can't deliver.
+    private(set) var hasParsedOnce: Bool = false
     var onCredentialsDetected: ((Credentials, UIImage?) -> Void)?
 
     let viewController: VisionScannerViewController
@@ -41,6 +46,7 @@ final class LiveCredentialScanner: CredentialScanning {
     func start() {
         hasEverSeenSSID = false
         hasEverSeenPassword = false
+        hasParsedOnce = false
         viewController.startSession()
     }
 
@@ -68,6 +74,7 @@ final class LiveCredentialScanner: CredentialScanning {
             candidateConfirmCount = 0
             return
         }
+        hasParsedOnce = true
 
         if credentials == candidate {
             candidateConfirmCount += 1

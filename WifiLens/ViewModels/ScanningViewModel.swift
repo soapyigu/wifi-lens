@@ -4,7 +4,13 @@ enum ScanningStatus {
     case looking
     case sawSSID
     case sawPassword
-    case both
+    /// Both fuzzy partials seen but parse() hasn't extracted a validated
+    /// pair yet. Diagnostic state — if the UI sits here, the parser is
+    /// failing on the label.
+    case sawBoth
+    /// parse() has succeeded at least once; auto-advance is one stable
+    /// frame away.
+    case confirmed
 }
 
 @MainActor
@@ -16,11 +22,12 @@ final class ScanningViewModel {
     var partialPassword: String? { scanner.partialPassword }
 
     var status: ScanningStatus {
+        if scanner.hasParsedOnce { return .confirmed }
         switch (scanner.hasEverSeenSSID, scanner.hasEverSeenPassword) {
         case (false, false): return .looking
         case (true,  false): return .sawSSID
         case (false, true):  return .sawPassword
-        case (true,  true):  return .both
+        case (true,  true):  return .sawBoth
         }
     }
 
