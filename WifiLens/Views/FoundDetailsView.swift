@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import Combine
 
 struct FoundDetailsView: View {
     var backgroundImage: UIImage?
@@ -14,6 +15,18 @@ struct FoundDetailsView: View {
     var onConnect: (String, String) -> Void
 
     @State private var vm: FoundDetailsViewModel
+    @FocusState private var focused: Field?
+    @State private var keyboardHeight: CGFloat = 0
+
+    private enum Field: Hashable { case ssid, password }
+
+    private static let keyboardHeightPublisher: AnyPublisher<CGFloat, Never> = Publishers.Merge(
+        NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
+            .compactMap { ($0.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect)?.height },
+        NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
+            .map { _ in CGFloat(0) }
+    )
+    .eraseToAnyPublisher()
 
     init(networkName: String, password: String, backgroundImage: UIImage? = nil,
          onRescan: @escaping () -> Void, onConnect: @escaping (String, String) -> Void) {
@@ -80,6 +93,10 @@ struct FoundDetailsView: View {
                         .foregroundColor(.primary)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
+                        .keyboardType(.asciiCapable)
+                        .submitLabel(.next)
+                        .focused($focused, equals: .ssid)
+                        .onSubmit { focused = .password }
                 }
                 .padding(.bottom, 16)
 
@@ -95,10 +112,18 @@ struct FoundDetailsView: View {
                                 .foregroundColor(.primary)
                                 .autocorrectionDisabled()
                                 .textInputAutocapitalization(.never)
+                                .keyboardType(.asciiCapable)
+                                .submitLabel(.go)
+                                .focused($focused, equals: .password)
+                                .onSubmit { onConnect(vm.networkName, vm.password) }
                         } else {
                             SecureField("Password", text: $vm.password)
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.primary)
+                                .keyboardType(.asciiCapable)
+                                .submitLabel(.go)
+                                .focused($focused, equals: .password)
+                                .onSubmit { onConnect(vm.networkName, vm.password) }
                         }
                         Spacer()
                         Button(action: { vm.isPasswordVisible.toggle() }) {
@@ -142,13 +167,28 @@ struct FoundDetailsView: View {
                             .cornerRadius(14)
                     }
                 }
-                .padding(.bottom, 48)
+                .padding(.bottom, focused == nil ? 48 : 16)
             }
             .padding(.horizontal, 24)
-            .background(Color(.systemBackground))
-            .cornerRadius(24, corners: [.topLeft, .topRight])
+            .padding(.bottom, keyboardHeight)
+            .background(
+                Color(.systemBackground)
+                    .cornerRadius(24, corners: [.topLeft, .topRight])
+                    .ignoresSafeArea(.container, edges: .bottom)
+            )
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { focused = nil }
+                }
+            }
         }
         .ignoresSafeArea()
+        .onReceive(Self.keyboardHeightPublisher) { height in
+            withAnimation(.easeOut(duration: 0.25)) {
+                keyboardHeight = height
+            }
+        }
     }
 }
 

@@ -2,6 +2,10 @@
 
 An iOS app that scans Wi-Fi router labels or cards using the camera, detects network credentials, and connects automatically.
 
+<p align="center">
+  <img src="docs/found-details.png" alt="Found Wi-Fi details screen" width="320" />
+</p>
+
 ## Features
 
 - Scan Wi-Fi network details via camera
