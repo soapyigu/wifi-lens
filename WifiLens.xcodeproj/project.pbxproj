@@ -13,8 +13,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0BD959402F46C57200374EC6 /* WifiLens */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = WifiLens;
 			sourceTree = "<group>";
 		};

@@ -5,6 +5,10 @@ import Vision
 protocol CredentialScanning: AnyObject {
     var partialSSID: String? { get }
     var partialPassword: String? { get }
+    var hasEverSeenSSID: Bool { get }
+    var hasEverSeenPassword: Bool { get }
+    var hasParsedOnce: Bool { get }
+    var viewController: UIViewController { get }
     var onCredentialsDetected: ((Credentials, UIImage?) -> Void)? { get set }
     func start()
     func stop()
@@ -28,7 +32,8 @@ final class LiveCredentialScanner: CredentialScanning {
     private(set) var hasParsedOnce: Bool = false
     var onCredentialsDetected: ((Credentials, UIImage?) -> Void)?
 
-    let viewController: VisionScannerViewController
+    var viewController: UIViewController { scannerVC }
+    private let scannerVC: VisionScannerViewController
 
     private let parser: CredentialParsing
     private var candidate: Credentials?
@@ -37,8 +42,8 @@ final class LiveCredentialScanner: CredentialScanning {
 
     init(parser: CredentialParsing) {
         self.parser = parser
-        self.viewController = VisionScannerViewController()
-        self.viewController.onObservations = { [weak self] observations in
+        self.scannerVC = VisionScannerViewController()
+        self.scannerVC.onObservations = { [weak self] observations in
             self?.handleObservations(observations)
         }
     }
@@ -47,15 +52,15 @@ final class LiveCredentialScanner: CredentialScanning {
         hasEverSeenSSID = false
         hasEverSeenPassword = false
         hasParsedOnce = false
-        viewController.startSession()
+        scannerVC.startSession()
     }
 
     func stop() {
-        viewController.stopSession()
+        scannerVC.stopSession()
     }
 
     func updateRegionOfInterest(_ rect: CGRect) {
-        viewController.setRegionOfInterest(rect)
+        scannerVC.setRegionOfInterest(rect)
     }
 
     private func handleObservations(_ observations: [VNRecognizedTextObservation]) {
@@ -88,12 +93,12 @@ final class LiveCredentialScanner: CredentialScanning {
         let snapshot = captureSnapshot()
         let callback = onCredentialsDetected
         onCredentialsDetected = nil
-        viewController.stopSession()
+        scannerVC.stopSession()
         callback?(credentials, snapshot)
     }
 
     private func captureSnapshot() -> UIImage? {
-        guard let view = viewController.viewIfLoaded else { return nil }
+        guard let view = scannerVC.viewIfLoaded else { return nil }
         let renderer = UIGraphicsImageRenderer(bounds: view.bounds)
         return renderer.image { ctx in
             view.layer.render(in: ctx.cgContext)

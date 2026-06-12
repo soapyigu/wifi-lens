@@ -20,53 +20,51 @@ struct ConnectSuccessView: View {
             Image("ConnectSuccess")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 120, height: 120)
-                .padding(.bottom, 32)
+                .frame(width: Layout.iconSize, height: Layout.iconSize)
+                .padding(.bottom, Layout.screenH)
 
             // Success title
             Text("Connected!")
-                .font(.system(size: 32, weight: .bold))
+                .font(Typography.title)
                 .foregroundColor(.primary)
-                .padding(.bottom, 12)
+                .padding(.bottom, Layout.buttonSpacing)
 
             // Network name
-            Text("Successfully connected to")
-                .font(.system(size: 16))
+            Text("Successfully connected to **\(networkName)**")
+                .font(Typography.body)
                 .foregroundColor(.secondary)
-            Text(networkName)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(.primary)
-                .padding(.top, 4)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, Layout.descriptionH)
 
             Spacer()
 
             // Done button
             Button(action: onDone) {
                 Text("Done")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(Typography.button)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(Color.blue)
-                    .cornerRadius(14)
+                    .padding(.vertical, Layout.buttonPaddingV)
+                    .background(Palette.accent)
+                    .cornerRadius(Layout.buttonRadius)
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 12)
+            .padding(.horizontal, Layout.screenH)
+            .padding(.bottom, Layout.buttonSpacing)
 
             // Scan another network
             Button(action: onScanAnother) {
                 Text("Scan Another")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(Typography.buttonSecondary)
                     .foregroundColor(.primary)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0x36/255, green: 0x41/255, blue: 0x53/255, alpha: 1) : UIColor(red: 0xE5/255, green: 0xE7/255, blue: 0xEB/255, alpha: 1) }))
-                    .cornerRadius(14)
+                    .padding(.vertical, Layout.buttonPaddingV)
+                    .background(Palette.secondaryButton)
+                    .cornerRadius(Layout.buttonRadius)
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 48)
+            .padding(.horizontal, Layout.screenH)
+            .padding(.bottom, Layout.bottomSafe)
         }
-        .background(Color(.systemBackground))
+        .background(Palette.cardFill)
     }
 }
 

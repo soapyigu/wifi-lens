@@ -51,14 +51,14 @@ struct FoundDetailsView: View {
                 }
             }
             .ignoresSafeArea()
-            .overlay(Color.green.opacity(0.12).ignoresSafeArea())
+            .overlay(Palette.successTint.ignoresSafeArea())
 
             // "Found Wi-Fi details" top label
             VStack {
                 Text("Found Wi-Fi details")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.green)
-                    .padding(.top, 72)
+                    .font(Typography.statusLabel)
+                    .foregroundColor(Palette.success)
+                    .padding(.top, Layout.topTitle)
                 Spacer()
             }
 
@@ -67,29 +67,29 @@ struct FoundDetailsView: View {
                 // Handle
                 HStack {
                     Spacer()
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.secondary.opacity(0.4))
-                        .frame(width: 36, height: 4)
+                    RoundedRectangle(cornerRadius: Layout.handleRadius)
+                        .fill(Palette.handle)
+                        .frame(width: Layout.handleWidth, height: Layout.handleHeight)
                     Spacer()
                 }
-                .padding(.top, 12)
-                .padding(.bottom, 20)
+                .padding(.top, Layout.buttonSpacing)
+                .padding(.bottom, Layout.sectionGap)
 
                 // Header
                 HStack(spacing: 10) {
                     Text("Detected Wi-Fi")
-                        .font(.system(size: 18, weight: .bold))
+                        .font(Typography.sectionTitle)
                         .foregroundColor(.primary)
                 }
-                .padding(.bottom, 20)
+                .padding(.bottom, Layout.sectionGap)
 
                 // Network name row
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Network Name")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(Typography.fieldLabel)
                         .foregroundColor(.secondary)
                     TextField("Network Name", text: $vm.networkName)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(Typography.bodyEmphasis)
                         .foregroundColor(.primary)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
@@ -98,17 +98,17 @@ struct FoundDetailsView: View {
                         .focused($focused, equals: .ssid)
                         .onSubmit { focused = .password }
                 }
-                .padding(.bottom, 16)
+                .padding(.bottom, Layout.rowGap)
 
                 // Password row
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Password")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(Typography.fieldLabel)
                         .foregroundColor(.secondary)
                     HStack {
                         if vm.isPasswordVisible {
                             TextField("Password", text: $vm.password)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(Typography.bodyEmphasis)
                                 .foregroundColor(.primary)
                                 .autocorrectionDisabled()
                                 .textInputAutocapitalization(.never)
@@ -118,7 +118,7 @@ struct FoundDetailsView: View {
                                 .onSubmit { onConnect(vm.networkName, vm.password) }
                         } else {
                             SecureField("Password", text: $vm.password)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(Typography.bodyEmphasis)
                                 .foregroundColor(.primary)
                                 .keyboardType(.asciiCapable)
                                 .submitLabel(.go)
@@ -132,60 +132,59 @@ struct FoundDetailsView: View {
                         }
                     }
                 }
-                .padding(.bottom, 20)
+                .padding(.bottom, Layout.sectionGap)
 
                 // Looks good indicator
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                        .font(.system(size: 15))
+                        .foregroundColor(Palette.success)
+                        .font(Typography.inlineIcon)
                     Text("Looks good")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.green)
+                        .font(Typography.captionEmphasis)
+                        .foregroundColor(Palette.success)
                 }
-                .padding(.bottom, 24)
+                .padding(.bottom, Layout.cardH)
 
                 // Buttons
-                HStack(spacing: 12) {
+                HStack(spacing: Layout.buttonSpacing) {
                     Button(action: onRescan) {
                         Text("Rescan")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(Typography.bodyEmphasis)
                             .foregroundColor(.primary)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color(UIColor { $0.userInterfaceStyle == .dark ? UIColor(red: 0x36/255, green: 0x41/255, blue: 0x53/255, alpha: 1) : UIColor(red: 0xE5/255, green: 0xE7/255, blue: 0xEB/255, alpha: 1) }))
-                            .cornerRadius(14)
+                            .padding(.vertical, Layout.rowGap)
+                            .background(Palette.secondaryButton)
+                            .cornerRadius(Layout.buttonRadius)
                     }
 
                     Button(action: { onConnect(vm.networkName, vm.password) }) {
                         Text("Connect")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(Typography.bodyEmphasis)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.blue)
-                            .cornerRadius(14)
+                            .padding(.vertical, Layout.rowGap)
+                            .background(Palette.accent)
+                            .cornerRadius(Layout.buttonRadius)
                     }
                 }
-                .padding(.bottom, focused == nil ? 48 : 16)
+                .padding(.bottom, focused == nil ? Layout.bottomSafe : Layout.rowGap)
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Layout.cardH)
             .padding(.bottom, keyboardHeight)
             .background(
-                Color(.systemBackground)
-                    .cornerRadius(24, corners: [.topLeft, .topRight])
+                Palette.cardFill
+                    .cornerRadius(Layout.cardRadius, corners: [.topLeft, .topRight])
                     .ignoresSafeArea(.container, edges: .bottom)
             )
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
                     Button("Done") { focused = nil }
                 }
             }
         }
         .ignoresSafeArea()
         .onReceive(Self.keyboardHeightPublisher) { height in
-            withAnimation(.easeOut(duration: 0.25)) {
+            withAnimation(.easeOut(duration: Motion.keyboardLift)) {
                 keyboardHeight = height
             }
         }

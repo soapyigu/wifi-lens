@@ -10,23 +10,18 @@ import UIKit
 
 struct ScanningView: View {
     var onCancel: () -> Void
-    var onCredentialsFound: (String, String, UIImage?) -> Void
+    var onCredentialsFound: (Credentials, UIImage?) -> Void
 
     @State private var vm: ScanningViewModel
     @State private var scanLineOffset: CGFloat = 0
 
-    init(onCancel: @escaping () -> Void,
-         onCredentialsFound: @escaping (String, String, UIImage?) -> Void) {
-        _vm = State(initialValue: ScanningViewModel(
-            scanner: LiveCredentialScanner(parser: LiveCredentialParser())
-        ))
+    init(vm: ScanningViewModel,
+         onCancel: @escaping () -> Void,
+         onCredentialsFound: @escaping (Credentials, UIImage?) -> Void) {
+        _vm = State(initialValue: vm)
         self.onCancel = onCancel
         self.onCredentialsFound = onCredentialsFound
     }
-
-    private let viewfinderSize: CGFloat = 260
-    private let cornerLength: CGFloat = 28
-    private let cornerLineWidth: CGFloat = 4
 
     private var scanningStatusText: String {
         switch vm.status {
@@ -46,18 +41,18 @@ struct ScanningView: View {
     var body: some View {
         ZStack {
             // Camera feed (hosted by the scanner service via VM)
-            DataScannerView(controller: vm.scannerController)
+            DataScannerView(controller: vm.cameraScene)
                 .ignoresSafeArea()
 
             // Dark overlay outside the viewfinder cutout
-            Color.black.opacity(0.55)
+            Palette.overlay
                 .ignoresSafeArea()
                 .mask(
                     Rectangle()
                         .ignoresSafeArea()
                         .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .frame(width: viewfinderSize, height: viewfinderSize)
+                            RoundedRectangle(cornerRadius: Layout.viewfinderRadius)
+                                .frame(width: Layout.viewfinderSize, height: Layout.viewfinderSize)
                                 .blendMode(.destinationOut)
                         )
                         .compositingGroup()
@@ -66,12 +61,12 @@ struct ScanningView: View {
             VStack(spacing: 0) {
                 // Status label
                 Text(scanningStatusText)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(Typography.statusLabel)
                     .foregroundColor(.white)
                     .multilineTextAlignment(.center)
-                    .animation(.easeInOut(duration: 0.2), value: scanningStatusText)
-                    .padding(.top, 72)
-                    .padding(.horizontal, 32)
+                    .animation(.easeInOut(duration: Motion.statusFade), value: scanningStatusText)
+                    .padding(.top, Layout.topTitle)
+                    .padding(.horizontal, Layout.screenH)
 
                 Spacer()
 
@@ -81,33 +76,33 @@ struct ScanningView: View {
                     Rectangle()
                         .fill(
                             LinearGradient(
-                                colors: [.clear, .cyan.opacity(0.9), .cyan, .cyan.opacity(0.9), .clear],
+                                colors: [.clear, Palette.scanLineSoft, Palette.scanLine, Palette.scanLineSoft, .clear],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
-                        .frame(width: viewfinderSize - 8, height: 3)
-                        .shadow(color: .cyan.opacity(0.9), radius: 6)
-                        .shadow(color: .cyan.opacity(0.5), radius: 12)
+                        .frame(width: Layout.viewfinderSize - 8, height: Layout.scanLineHeight)
+                        .shadow(color: Palette.scanLineSoft, radius: Layout.scanLineGlowRadius)
+                        .shadow(color: Palette.scanLineGlow, radius: Layout.scanLineGlowRadiusOuter)
                         .offset(y: scanLineOffset)
 
                     // Corner brackets
                     CornerBracketsView(
-                        size: viewfinderSize,
-                        cornerLength: cornerLength,
-                        lineWidth: cornerLineWidth
+                        size: Layout.viewfinderSize,
+                        cornerLength: Layout.cornerBracketLength,
+                        lineWidth: Layout.cornerBracketLineWidth
                     )
                 }
-                .frame(width: viewfinderSize, height: viewfinderSize)
+                .frame(width: Layout.viewfinderSize, height: Layout.viewfinderSize)
                 .clipped()
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
                     vm.updateRegionOfInterest(frame)
                 }
                 .onAppear {
-                    let start = -(viewfinderSize / 2 - 4)
+                    let start = -(Layout.viewfinderSize / 2 - 4)
                     scanLineOffset = start
                     withAnimation(
-                        .linear(duration: 1.8)
+                        .linear(duration: Motion.scanLineSweep)
                         .repeatForever(autoreverses: false)
                     ) {
                         scanLineOffset = -start
@@ -119,12 +114,12 @@ struct ScanningView: View {
                 // Cancel button
                 Button(action: onCancel) {
                     Text("Cancel")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(Typography.buttonSecondary)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 40)
-                        .padding(.vertical, 12)
-                        .background(Color.white.opacity(0.2))
-                        .cornerRadius(22)
+                        .padding(.horizontal, Layout.descriptionH)
+                        .padding(.vertical, Layout.buttonSpacing)
+                        .background(Palette.cancelButton)
+                        .cornerRadius(Layout.pillRadius)
                 }
                 .padding(.bottom, 52)
             }
@@ -164,8 +159,4 @@ private struct CornerBracketsView: View {
         }
         .stroke(Color.white, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
     }
-}
-
-#Preview {
-    ScanningView(onCancel: {}, onCredentialsFound: { _, _, _ in })
 }

@@ -18,44 +18,44 @@ struct WelcomeView: View {
             Image("wifi")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 120, height: 120)
-                .padding(.bottom, 40)
+                .frame(width: Layout.iconSize, height: Layout.iconSize)
+                .padding(.bottom, Layout.descriptionH)
 
             // Title
             Text("Wi-Fi Lens")
-                .font(.system(size: 36, weight: .bold))
+                .font(Typography.display)
                 .foregroundColor(.primary)
-                .padding(.bottom, 16)
+                .padding(.bottom, Layout.rowGap)
 
             // Description
             Text("Point your camera at a router label or Wi-Fi card. We'll detect the network and connect.")
-                .font(.system(size: 16))
+                .font(Typography.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
-                .padding(.horizontal, 40)
+                .padding(.horizontal, Layout.descriptionH)
 
             Spacer()
 
             // Start Scanning button
             Button(action: onStartScanning) {
                 Text("Start Scanning")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(Typography.button)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(Color.blue)
-                    .cornerRadius(14)
+                    .padding(.vertical, Layout.buttonPaddingV)
+                    .background(Palette.accent)
+                    .cornerRadius(Layout.buttonRadius)
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 12)
+            .padding(.horizontal, Layout.screenH)
+            .padding(.bottom, Layout.buttonSpacing)
 
             Text("Processing happens on-device")
-                .font(.system(size: 14))
+                .font(Typography.caption)
                 .foregroundColor(.secondary)
-                .padding(.bottom, 48)
+                .padding(.bottom, Layout.bottomSafe)
         }
-        .background(Color(.systemBackground))
+        .background(Palette.cardFill)
     }
 }
 
