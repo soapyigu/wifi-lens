@@ -9,6 +9,9 @@ fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
 
+# App Store Connect API keys — NEVER commit
+fastlane/AuthKey_*.p8
+
 # Xcode user-specific files
 *.xcuserstate
 xcuserdata/
