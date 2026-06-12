@@ -23,7 +23,7 @@ struct ScanningView: View {
         self.onCredentialsFound = onCredentialsFound
     }
 
-    private var scanningStatusText: String {
+    private var scanningStatusText: LocalizedStringKey {
         switch vm.status {
         case .looking:
             return "Looking for Wi-Fi name\nand password..."
