@@ -178,6 +178,7 @@ struct FoundDetailsView: View {
             )
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
                     Button("Done") { focused = nil }
                 }
             }

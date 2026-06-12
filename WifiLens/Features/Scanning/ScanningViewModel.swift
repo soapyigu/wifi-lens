@@ -37,12 +37,15 @@ final class ScanningViewModel {
 
     init(scanUseCase: ScanForCredentialsUseCase) {
         self.scanUseCase = scanUseCase
-        self.scanUseCase.onCredentialsFound = { [weak self] credentials, snapshot in
-            self?.onCredentialsFound?(credentials, snapshot)
-        }
     }
 
     func start() {
+        // Wire the scanner→VM callback at start, not init: parent re-renders
+        // construct throwaway VMs whose init would otherwise clobber the
+        // scanner's captured `self` with a soon-to-be-deallocated reference.
+        scanUseCase.onCredentialsFound = { [weak self] credentials, snapshot in
+            self?.onCredentialsFound?(credentials, snapshot)
+        }
         scanUseCase.start()
     }
 

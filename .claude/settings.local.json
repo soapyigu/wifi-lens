@@ -9,7 +9,13 @@
       "Bash(brew install:*)",
       "Bash(fastlane beta:*)",
       "Bash(xcode-select:*)",
-      "Bash(xcodebuild:*)"
+      "Bash(xcodebuild:*)",
+      "Bash(claude mcp:*)",
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
