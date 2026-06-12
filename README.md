@@ -1,37 +1,49 @@
 # Wi-Fi Lens
 
-An iOS app that scans Wi-Fi router labels or cards using the camera, detects network credentials, and connects automatically.
+> Point your camera at a router label. Wi-Fi Lens reads the network name and password, then connects with one tap. Pure on-device processing — no account, no tracking, no data leaves your phone.
 
 <p align="center">
-  <img src="docs/found-details.png" alt="Found Wi-Fi details screen" width="320" />
+  <img src="docs/start.png" alt="Welcome screen" width="180" />
+  <img src="docs/scan.png" alt="Camera scanning" width="180" />
+  <img src="docs/found.png" alt="Detected credentials" width="180" />
+  <img src="docs/connecting.png" alt="Connecting" width="180" />
+  <img src="docs/success.png" alt="Connected" width="180" />
 </p>
 
-## Features
+## How it works
 
-- Scan Wi-Fi network details via camera
-- Auto-connect to detected networks
-- On-device processing — no data leaves your phone
+1. Aim your camera at any printed Wi-Fi credentials — a router label, a Wi-Fi card, a coffee shop sign.
+2. On-device text recognition (Vision) extracts the SSID and password in real time.
+3. Tap **Connect** — iOS's `NEHotspotConfiguration` handles the secure join.
 
-## Screens
+## Privacy
 
-| # | Screen | Description |
-|---|---|---|
-| 1 | Welcome | Landing screen with "Start Scanning" CTA |
-| 2 | Camera Scanning | Live camera view with animated scanning overlay |
-| 3 | Found Wi-Fi Details | Bottom sheet showing detected network name & password |
-| 4 | Connecting | Loading state while connecting to the network |
-| 5 | Connected | Success confirmation screen |
-| 6 | Scanning Warning | Guidance to adjust position or lighting |
-| 7 | Connection Failed | Error state with retry option |
+Wi-Fi Lens does not collect, transmit, or store any personal data. There is no backend, no analytics SDK, no advertising, and no third-party trackers. See the full [privacy policy](https://soapyigu.github.io/wifi-lens/PRIVACY).
 
-## Requirements
+## Tech stack
 
-- iOS 18+
-- Xcode 16+
-- Camera permission
+- SwiftUI (iOS 17.6+)
+- Vision framework for on-device OCR
+- AVFoundation for the camera pipeline
+- NetworkExtension (`NEHotspotConfiguration`) for the Wi-Fi join
+- Layered architecture: `App/`, `Features/`, `Design/`, `UseCases/`, `Services/`
 
-## Getting Started
+## Running locally
 
 1. Clone the repo
-2. Open `WifiLens.xcodeproj` in Xcode
-3. Select a simulator or device and press `Cmd+R`
+2. Open `WifiLens.xcodeproj` in Xcode 16+
+3. Select a real iPhone (the camera + `NEHotspotConfiguration` don't work in the simulator) and press <kbd>⌘R</kbd>
+
+## Localization
+
+Strings are managed via a single `Localizable.xcstrings` catalog with translations for English, Simplified Chinese, Spanish, Japanese, and French.
+
+## Releases
+
+CI/CD via [fastlane](https://fastlane.tools/):
+
+- `fastlane beta` — build + upload to TestFlight
+- `fastlane release_prepare` — push metadata + screenshots to App Store Connect
+- `fastlane release_submit` — submit for App Review
+
+Authentication uses an App Store Connect API key (stored locally, gitignored).
