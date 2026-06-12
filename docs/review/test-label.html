@@ -6,83 +6,30 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
   :root { color-scheme: light; }
+  html, body { background: #ffffff; }
   body {
     margin: 0;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f3f3f5;
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-    padding: 32px;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+    padding: 48px;
   }
   .label {
-    width: 520px;
-    max-width: 100%;
-    padding: 36px 40px 32px;
-    background: #ffffff;
-    border-radius: 6px;
-    box-shadow: 0 1px 0 #d8d8dc, 0 24px 60px -24px rgba(0,0,0,0.18);
-    border: 1px solid #d8d8dc;
+    color: #333333;
+    font-weight: 700;
+    font-size: clamp(40px, 8vw, 80px);
+    line-height: 1.15;
+    letter-spacing: -0.005em;
   }
-  .brand {
-    font-size: 13px;
-    letter-spacing: 0.18em;
-    color: #888;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .model {
-    font-size: 20px;
-    font-weight: 600;
-    color: #111;
-    margin-bottom: 24px;
-  }
-  hr {
-    border: 0;
-    border-top: 1px dashed #c8c8cc;
-    margin: 0 0 20px;
-  }
-  .row { margin-bottom: 16px; }
-  .key {
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: #6e6e73;
-    margin-bottom: 4px;
-  }
-  .val {
-    font-family: "SF Mono", "Menlo", "Consolas", monospace;
-    font-size: 26px;
-    font-weight: 600;
-    color: #111;
-    letter-spacing: 0.01em;
-  }
-  .footnote {
-    margin-top: 24px;
-    font-size: 11px;
-    color: #8e8e93;
-    text-align: center;
-    line-height: 1.4;
-  }
+  .line + .line { margin-top: 0.6em; }
 </style>
 </head>
 <body>
-  <div class="label" role="img" aria-label="Sample Wi-Fi router label">
-    <div class="brand">Wi-Fi Network</div>
-    <div class="model">Test Router 2026</div>
-    <hr>
-    <div class="row">
-      <div class="key">SSID</div>
-      <div class="val">CoffeeNetwork</div>
-    </div>
-    <div class="row">
-      <div class="key">Password</div>
-      <div class="val">ThisIsPassword!</div>
-    </div>
-    <div class="footnote">
-      For App Review of Wi-Fi Lens. Point the camera at this page from another device.
-    </div>
+  <div class="label" role="img" aria-label="Sample Wi-Fi credentials for App Review">
+    <div class="line">WIFI: ***REMOVED***</div>
+    <div class="line">Pwd: ***REMOVED***</div>
   </div>
 </body>
 </html>
