@@ -1,0 +1,13 @@
+Wi-Fi Lens turns your camera into the fastest way onto a new network. Point it at a router label, a Wi-Fi card, or any printed credentials, and Wi-Fi Lens reads the network name and password in real time, then connects with a single tap.
+
+How it works
+• Point the camera at printed Wi-Fi credentials
+• On-device text recognition extracts the network name and password
+• Tap Connect — iOS handles the secure join
+
+Why you'll like it
+• Pure on-device processing — credentials never leave your phone
+• No account, no tracking, no ads, ever
+• Works with most home and small-business router labels
+
+Wi-Fi Lens is built for guests, families, and travelers tired of squinting at tiny labels and typing long passwords by hand.

@@ -1,0 +1,1 @@
+Point your camera at any router label. We'll read the network name and password and connect — all on-device.

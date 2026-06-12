@@ -1,0 +1,1 @@
+wifi,scan,camera,router,password,ocr,vision,connect,hotspot,network

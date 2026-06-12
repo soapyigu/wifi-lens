@@ -6,9 +6,9 @@ platform :ios do
   lane :beta do
     # Headless auth via App Store Connect API key — no 2FA prompt
     api_key = app_store_connect_api_key(
-      key_id: "5264UM4QX6",
+      key_id: "GU8XZ24L8G",
       issuer_id: "ff8d29fe-542a-4cbb-aec1-5214e7276d4c",
-      key_filepath: File.expand_path("AuthKey_5264UM4QX6.p8", __dir__),
+      key_filepath: File.expand_path("AuthKey_GU8XZ24L8G.p8", __dir__),
       in_house: false
     )
 
@@ -38,6 +38,56 @@ platform :ios do
     upload_to_testflight(
       api_key: api_key,
       skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Upload metadata + screenshots + select latest build (does NOT submit)"
+  lane :release_prepare do
+    api_key = app_store_connect_api_key(
+      key_id: "GU8XZ24L8G",
+      issuer_id: "ff8d29fe-542a-4cbb-aec1-5214e7276d4c",
+      key_filepath: File.expand_path("AuthKey_GU8XZ24L8G.p8", __dir__),
+      in_house: false
+    )
+
+    upload_to_app_store(
+      api_key: api_key,
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      skip_metadata: false,
+      overwrite_screenshots: true,
+      force: true,
+      automatic_release: false,
+      phased_release: true,
+      submit_for_review: false,
+      precheck_include_in_app_purchases: false,
+      run_precheck_before_submit: false
+    )
+  end
+
+  desc "Submit the prepared metadata for App Store Review"
+  lane :release_submit do
+    api_key = app_store_connect_api_key(
+      key_id: "GU8XZ24L8G",
+      issuer_id: "ff8d29fe-542a-4cbb-aec1-5214e7276d4c",
+      key_filepath: File.expand_path("AuthKey_GU8XZ24L8G.p8", __dir__),
+      in_house: false
+    )
+
+    upload_to_app_store(
+      api_key: api_key,
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      skip_metadata: true,
+      force: true,
+      automatic_release: false,
+      submit_for_review: true,
+      precheck_include_in_app_purchases: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false,
+        content_rights_contains_third_party_content: false
+      }
     )
   end
 

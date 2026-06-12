@@ -1,0 +1,10 @@
+This app reads printed Wi-Fi credentials with the camera and offers to join the network using NEHotspotConfiguration.
+
+To test without physical router access:
+1. Open this image on a second screen (laptop or another iPad):
+   https://soapyigu.github.io/wifi-lens/docs/review/test-label.html
+2. Launch Wi-Fi Lens, tap Start Scanning, and point the camera at that screen.
+3. The app will detect "CafeReview-Demo" / "SamplePass2026!" and present the Found Wi-Fi sheet.
+4. Tap Connect. iOS will present its standard NEHotspotConfiguration prompt. Since no network with that SSID is actually nearby, the join will fail with "Connection Failed" — this is the expected path for sandbox testing. The scan + system prompt are the capabilities under review.
+
+Contact: soapyigu@gmail.com if any step is unclear.

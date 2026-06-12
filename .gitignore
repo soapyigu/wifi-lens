@@ -12,6 +12,9 @@ fastlane/test_output
 # App Store Connect API keys — NEVER commit
 fastlane/AuthKey_*.p8
 
+# Personal contact info that ASC requires but shouldn't be public
+fastlane/metadata/review_information/phone_number.txt
+
 # Xcode user-specific files
 *.xcuserstate
 xcuserdata/
