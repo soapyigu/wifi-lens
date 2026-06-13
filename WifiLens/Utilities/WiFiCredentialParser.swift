@@ -74,11 +74,26 @@ struct WiFiCredentialParser {
 
     // MARK: - Value Extraction
 
+    /// True iff the keyword match sits between non-alphanumeric boundaries.
+    /// Prevents "pass" inside "SamplePass" from being treated as a label.
+    private static func isWordBoundaryMatch(_ line: String, range: Range<String.Index>) -> Bool {
+        if range.lowerBound != line.startIndex {
+            let prev = line[line.index(before: range.lowerBound)]
+            if prev.isLetter || prev.isNumber { return false }
+        }
+        if range.upperBound != line.endIndex {
+            let next = line[range.upperBound]
+            if next.isLetter || next.isNumber { return false }
+        }
+        return true
+    }
+
     /// Same as extractValue but also returns the line index where the keyword was found.
     private static func extractValueWithLineIndex(for keywords: [String], in lines: [String]) -> (String, Int)? {
         for (index, line) in lines.enumerated() {
             for keyword in keywords {
                 guard let keyRange = line.range(of: keyword, options: .caseInsensitive) else { continue }
+                guard isWordBoundaryMatch(line, range: keyRange) else { continue }
 
                 let afterKeyword = String(line[keyRange.upperBound...])
                     .trimmingCharacters(in: .whitespaces)
@@ -108,6 +123,7 @@ struct WiFiCredentialParser {
         for (index, line) in lines.enumerated() {
             for keyword in keywords {
                 guard let keyRange = line.range(of: keyword, options: .caseInsensitive) else { continue }
+                guard isWordBoundaryMatch(line, range: keyRange) else { continue }
 
                 let afterKeyword = String(line[keyRange.upperBound...])
                     .trimmingCharacters(in: .whitespaces)
@@ -147,12 +163,12 @@ struct WiFiCredentialParser {
     private static func trimAtNextField(_ value: String) -> String {
         var truncateAt = value.endIndex
         for kw in ssidKeywords + passwordKeywords {
-            if let kwRange = value.range(of: kw, options: .caseInsensitive) {
-                let afterKw = String(value[kwRange.upperBound...]).trimmingCharacters(in: .whitespaces)
-                if afterKw.hasPrefix(":") || afterKw.hasPrefix("=") {
-                    if kwRange.lowerBound < truncateAt {
-                        truncateAt = kwRange.lowerBound
-                    }
+            guard let kwRange = value.range(of: kw, options: .caseInsensitive) else { continue }
+            guard isWordBoundaryMatch(value, range: kwRange) else { continue }
+            let afterKw = String(value[kwRange.upperBound...]).trimmingCharacters(in: .whitespaces)
+            if afterKw.hasPrefix(":") || afterKw.hasPrefix("=") {
+                if kwRange.lowerBound < truncateAt {
+                    truncateAt = kwRange.lowerBound
                 }
             }
         }
@@ -169,7 +185,10 @@ struct WiFiCredentialParser {
 
     private static func isLikelyLabelLine(_ line: String) -> Bool {
         let lowered = line.lowercased()
-        return (ssidKeywords + passwordKeywords).contains { lowered.contains($0) }
+        return (ssidKeywords + passwordKeywords).contains { kw in
+            guard let range = lowered.range(of: kw) else { return false }
+            return isWordBoundaryMatch(lowered, range: range)
+        }
     }
 
     private static func isLikelyKeyword(_ value: String) -> Bool {
